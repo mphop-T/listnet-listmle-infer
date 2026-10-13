@@ -1,29 +1,29 @@
-# allrank-infer
+# listnet-listmle-infer
 
 ## About
 
-Notebook-based clone of [allegro/allRank](https://github.com/allegro/allRank) used to generate ListNet and ListMLE prediction scores for ranking senior men's and women's 100 m sprint athletes. It loads the trained weights produced in [allrank-train](https://github.com/mphop-T/allRank-train) and scores the 2024 test files. No training happens in this repo.
+Notebook-based clone of [allegro/allRank](https://github.com/allegro/allRank) used to generate ListNet and ListMLE prediction scores for ranking senior men's and women's 100 m sprint athletes. It loads the trained weights produced in [listmle_listnet_train](https://github.com/mphop-T/listmle_listnet_train) and scores the 2024 test files. No training happens in this repo.
 
 This is **stage 3** of the ListNet/ListMLE pipeline, which is spread over three repos:
 
 | Stage | Step | Repo |
 |---|---|---|
-| 1 | Data preparation and LibSVM export | [athletes-ranking](https://github.com/mphop-T/athletes-ranking) |
-| 2 | Tuning and training (Docker), producing a `model.pkl` and `used_config.json` per run | [allrank-train](https://github.com/mphop-T/allRank-train) |
-| 3 | Scoring the men's and women's 2024 test sets with the selected checkpoints | **allrank-infer** (this repo) |
-| 4 | Evaluation (NDCG, Spearman) and significance testing for all four models | [athletes-ranking](https://github.com/mphop-T/athletes-ranking) |
+| 1 | Data preparation and LibSVM export | [athletes-ranking-general](https://github.com/mphop-T/athletes-ranking-general) |
+| 2 | Tuning and training (Docker), producing a `model.pkl` and `used_config.json` per run | [listmle_listnet_train](https://github.com/mphop-T/listmle_listnet_train) |
+| 3 | Scoring the men's and women's 2024 test sets with the selected checkpoints | **listnet-listmle-infer** (this repo) |
+| 4 | Evaluation (NDCG, Spearman) and significance testing for all four models | [athletes-ranking-general](https://github.com/mphop-T/athletes-ranking-general) |
 
 ## What this repo does
 
 For each of the four models (ListMLE men, ListMLE women, ListNet men, ListNet women), a notebook:
 
-1. Reads the `used_config.json` of the run selected during tuning in allrank-train and points its `data.path` at the gender folder holding the test file. The edited copy is saved in `scripts/`.
+1. Reads the `used_config.json` of the run selected during tuning in listmle_listnet_train and points its `data.path` at the gender folder holding the test file. The edited copy is saved in `scripts/`.
 2. Rebuilds the network from that configuration with `make_model` and loads the saved weights from `model.pkl` into it with `load_state_dict`. The weights are those of the final training epoch.
 3. Loads the 2024 test file (`test.txt`, LibSVM format, one query per event) and pads every event to the length of the longest event.
 4. Passes the test data through the network in evaluation mode with gradients switched off, so that every athlete receives one real-valued score.
 5. Writes the scores to a text file, one event per line. Positions that are padding receive a score of minus infinity and must be discarded when the scores are matched back to athletes.
 
-The athletes are not ranked here. Ranking within each event, NDCG, Spearman's correlation and the significance tests are done in [athletes-ranking](https://github.com/mphop-T/athletes-ranking), where the score files are attached to the athlete rows restored from the LibSVM file in the same order.
+The athletes are not ranked here. Ranking within each event, NDCG, Spearman's correlation and the significance tests are done in [athletes-ranking-general](https://github.com/mphop-T/athletes-ranking-general), where the score files are attached to the athlete rows restored from the LibSVM file in the same order.
 
 ## Requirements
 
@@ -34,8 +34,8 @@ The athletes are not ranked here. Ranking within each event, NDCG, Spearman's co
 
 | Input | Source |
 |---|---|
-| `model.pkl` and `used_config.json` of the selected run for each model and gender | [allrank-train](https://github.com/mphop-T/allRank-train) |
-| `test.txt` per gender folder (`athletes_men_data_combined/`, `athletes_women_data_combined/`) | Data-preparation notebook in [athletes-ranking](https://github.com/mphop-T/athletes-ranking) |
+| `model.pkl` and `used_config.json` of the selected run for each model and gender | [listmle_listnet_train](https://github.com/mphop-T/listmle_listnet_train) |
+| `test.txt` per gender folder (`athletes_men_data_combined/`, `athletes_women_data_combined/`) | Data-preparation notebook in [athletes-ranking-general](https://github.com/mphop-T/athletes-ranking-general) |
 
 The selected runs are:
 
@@ -59,14 +59,14 @@ One score file per model and gender:
 | `allrank_listnet_male_combined_tensor_output.txt` | ListNet | Men |
 | `allrank_listnet_women_combined_tensor_output.txt` | ListNet | Women |
 
-Each line holds the scores of one event, in the order of the events in `test.txt`. These files are copied into athletes-ranking for evaluation.
+Each line holds the scores of one event, in the order of the events in `test.txt`. These files are copied into athletes-ranking-general for evaluation.
 
 ## Usage
 
-1. Create a Python 3.9.23 environment and install the dependencies from `requirements.txt` (PyTorch, pandas and the allRank package). Training does not need Docker, so a normal Python environment is enough. Run the notebooks in a kernel for this environment. [athletes-ranking](https://github.com/mphop-T/athletes-ranking) uses a different one (Python 3.13.5), so the two repos should not share a kernel.
+1. Create a Python 3.9.23 environment and install the dependencies from `requirements.txt` (PyTorch, pandas and the allRank package). Training does not need Docker, so a normal Python environment is enough. Run the notebooks in a kernel for this environment. [athletes-ranking-general](https://github.com/mphop-T/athletes-ranking-general) uses a different one (Python 3.13.5), so the two repos should not share a kernel.
 2. Copy the selected `model.pkl` and `used_config.json` for one model and gender into the repo, and put the matching `test.txt` in the gender data folder.
 3. Open the notebook for that model and gender and run all cells. The first code cell that uses `used_config.json` writes the edited config to `scripts/`.
-4. Repeat for the other three models and genders, then copy the four score files to athletes-ranking.
+4. Repeat for the other three models and genders, then copy the four score files to athletes-ranking-general.
 
 Note that `model.pkl` is a Python pickle. Only load checkpoints you trained yourself or received from a source you trust.
 
