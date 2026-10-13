@@ -1,0 +1,49 @@
+{
+  "model": {
+    "fc_model": {
+      "sizes": [64, 128, 256, 128, 64],
+      "input_norm": true,
+      "activation": "ReLU",
+      "dropout": 0.2
+    },
+    "transformer": null,
+    "post_model": {
+      "output_activation": null,
+      "d_output": 1
+    }
+  },
+  "data": {
+    "path": "/allrank/athletes_women_data_combined",
+    "validation_ds_role": "vali",
+    "num_workers": 10,
+    "batch_size": 32,
+    "slate_length": 10
+  },
+  "optimizer": {
+    "name": "Adam",
+    "args": { "lr": 0.005 }
+  },
+  "lr_scheduler": {
+    "name": "StepLR",
+    "args": {
+      "step_size": 10,
+      "gamma": 0.5
+    }
+  },
+  "training": {
+    "epochs": 40,
+    "early_stopping_patience": 20,
+    "gradient_clipping_norm": null
+  },
+   "metrics": ["ndcg_5", "ndcg_8"],
+  "loss": {
+    "name": "listMLE",
+    "args": {
+    }
+  },
+  "val_metric": "ndcg_5",
+  "detect_anomaly": true,
+  "expected_metrics": {
+    "val": { "ndcg_5": 0.5 }
+  }
+}
